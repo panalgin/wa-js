@@ -1,36 +1,34 @@
-name: Publish
+name: Publish to GitHub Packages
 
 on:
   push:
-    tags:
-      - 'v*'
-
-permissions:
-  id-token: write
-  contents: write
+    branches:
+      - master
 
 jobs:
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Checkout
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Fetching tags
-        run: git fetch --tags -f || true
-
       - name: Setup Node
-        uses: actions/setup-node@v6.1.0
+        uses: actions/setup-node@v4
         with:
-          node-version: '24'
-          registry-url: 'https://registry.npmjs.org'
+          node-version: '22'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@panalgin'
 
       - name: Get npm cache directory
         id: npm-cache
         run: |
           echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
+
       - name: Setup npm cache
         uses: actions/cache@v4
         with:
@@ -44,36 +42,12 @@ jobs:
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: true
 
-      - name: Publish in NPM
-        run: npm publish --access public
+      - name: Build Package
+        run: npm run build:prd
 
-      - name: Generate Changelog
-        id: generate_changelog
+      - name: Publish to GitHub Packages
         run: |
-          changelog=$(npm run changelog:last --silent)
-          echo "changelog<<EOF" >> $GITHUB_OUTPUT
-          echo "${changelog}" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-      - name: Create Release
-        uses: meeDamian/github-release@2.0
+          sed -i 's/@wppconnect/@panalgin/' package.json
+          npm publish
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ github.ref }}
-          commitish: ${{ github.sha }}
-          name: ${{ github.ref_name }}
-          body: ${{ steps.generate_changelog.outputs.changelog }}
-          draft: false
-          prerelease: false
-          files: >
-            dist/wppconnect-wa.js
-          gzip: folders
-          allow_override: true
-
-      - name: Update WPPConnect Site
-        run: gh workflow run update-blog.yml --repo wppconnect-team/wppconnect-team.github.io
-        continue-on-error: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

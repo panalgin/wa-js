@@ -19,11 +19,11 @@
  *
  * @example
  * ```javascript
- * Set value for who can see your online status like 'all'
- * await WPP.privacy.setAbout('all');
+ * // Set online visibility to everyone
+ * await WPP.privacy.setOnline('all');
  *
- * Set value for who can see your online status like 'match_last_seen'
- * await WPP.privacy.setAbout('match_last_seen');
+ * // Set online visibility to match lastSeen setting
+ * await WPP.privacy.setOnline('match_last_seen');
  * ```
  *
  * @category Privacy
@@ -32,7 +32,8 @@
 import { WPPError } from '../../util';
 import {
   getUserPrivacySettings,
-  setPrivacyForOneCategory,
+  setPrivacyJob,
+  setUserPrivacySettings,
 } from '../../whatsapp/functions';
 
 export enum setOnlineTypes {
@@ -54,9 +55,15 @@ export async function setOnline(
       }
     );
   }
-  await setPrivacyForOneCategory({
+  // Use setPrivacyJob directly to bypass broken setPrivacyForOneCategory
+  // WhatsApp removed 'online' from PrivacyDisallowedListType enum but server still accepts it
+  await setPrivacyJob({
     name: 'online',
     value: value,
   });
-  return getUserPrivacySettings().online as any;
+
+  // Update local cache
+  setUserPrivacySettings({ online: value });
+
+  return getUserPrivacySettings().online as setOnlineTypes;
 }

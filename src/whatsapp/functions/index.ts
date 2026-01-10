@@ -152,6 +152,7 @@ export * from './setArchive';
 export * from './setGroup';
 export * from './setPin';
 export * from './setPrivacyForOneCategory';
+export * from './setPrivacyJob';
 export * from './setPushname';
 export * from './shouldHaveAccountLid';
 export * from './status';

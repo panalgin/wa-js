@@ -31,11 +31,24 @@ export declare function getUserPrivacySettings(): {
   readReceipts: string;
 };
 
+export declare function setUserPrivacySettings(
+  settings: Partial<{
+    about: string;
+    callAdd: string;
+    groupAdd: string;
+    lastSeen: string;
+    online: string;
+    profilePicture: string;
+    readReceipts: string;
+  }>
+): void;
+
 exportModule(
   exports,
   {
     getPushname: 'getPushname',
     getUserPrivacySettings: 'getUserPrivacySettings',
+    setUserPrivacySettings: 'setUserPrivacySettings',
   },
   (m) => m.getPushname && m.setBrowserId && m.getUserPrivacySettings
 );
